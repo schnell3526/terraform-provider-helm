@@ -813,13 +813,14 @@ func TestAccResourceRelease_updateExistingFailed(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			// Step 4: Fix the configuration and verify recovery from FAILED to DEPLOYED
+			// Note: revision is 4 because each failed upgrade (Step 2 and Step 3) increments the revision
 			{
 				Config: testAccHelmReleaseConfigValues(
 					testResourceName, namespace, name, "test-chart", "1.2.3",
 					[]string{"serviceAccount:\n  name: recovered-name"},
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("helm_release.test", "metadata.revision", "3"),
+					resource.TestCheckResourceAttr("helm_release.test", "metadata.revision", "4"),
 					resource.TestCheckResourceAttr("helm_release.test", "status", release.StatusDeployed.String()),
 				),
 			},
@@ -852,8 +853,8 @@ func TestAccResourceRelease_statePreservedDuringRefresh(t *testing.T) {
 				),
 			},
 			// Step 2: Run refresh (via RefreshState) - resource should remain in state
+			// Note: RefreshState cannot be used with Config, so we omit Config here
 			{
-				Config:       config,
 				RefreshState: true,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("helm_release.test", "metadata.revision", "1"),
@@ -909,11 +910,8 @@ func TestAccResourceRelease_refreshPreservesFailedState(t *testing.T) {
 				),
 			},
 			// Step 3: Run refresh - FAILED release should remain in state
+			// Note: RefreshState cannot be used with Config, so we omit Config here
 			{
-				Config: testAccHelmReleaseConfigValues(
-					testResourceName, namespace, name, "test-chart", "1.2.3",
-					[]string{"service:\n  type: invalid%-$type"},
-				),
 				RefreshState:       true,
 				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeAggregateTestCheckFunc(
