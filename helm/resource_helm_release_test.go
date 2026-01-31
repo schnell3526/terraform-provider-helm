@@ -800,7 +800,7 @@ func TestAccResourceRelease_updateExistingFailed(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("helm_release.test", "metadata.revision", "2"),
-					resource.TestCheckResourceAttr("helm_release.test", "status", "FAILED"),
+					resource.TestCheckResourceAttr("helm_release.test", "status", release.StatusFailed.String()),
 				),
 			},
 			// Step 3: Re-apply same invalid config - should NOT produce "cannot re-use a name" error
@@ -906,7 +906,7 @@ func TestAccResourceRelease_refreshPreservesFailedState(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("helm_release.test", "metadata.revision", "2"),
-					resource.TestCheckResourceAttr("helm_release.test", "status", "FAILED"),
+					resource.TestCheckResourceAttr("helm_release.test", "status", release.StatusFailed.String()),
 				),
 			},
 			// Step 3: Run refresh - FAILED release should remain in state
@@ -915,7 +915,7 @@ func TestAccResourceRelease_refreshPreservesFailedState(t *testing.T) {
 				RefreshState:       true,
 				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("helm_release.test", "status", "FAILED"),
+					resource.TestCheckResourceAttr("helm_release.test", "status", release.StatusFailed.String()),
 				),
 			},
 		},
@@ -961,7 +961,7 @@ func TestAccResourceRelease_comprehensiveReleaseDetection(t *testing.T) {
 				ExpectError:        regexp.MustCompile("Unsupported value"),
 				ExpectNonEmptyPlan: true,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("helm_release.test", "status", "FAILED"),
+					resource.TestCheckResourceAttr("helm_release.test", "status", release.StatusFailed.String()),
 					resource.TestCheckResourceAttr("helm_release.test", "metadata.revision", "3"),
 				),
 			},
