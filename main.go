@@ -9,7 +9,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/hashicorp/terraform-provider-helm/helm"
+	"github.com/schnell3526/terraform-provider-helm/helm"
 	"k8s.io/klog"
 )
 
@@ -29,7 +29,7 @@ func main() {
 	}
 
 	opts := providerserver.ServeOpts{
-		Address:         "registry.terraform.io/hashicorp/helm",
+		Address:         "registry.terraform.io/schnell3526/helm",
 		Debug:           debug,
 		ProtocolVersion: 6,
 	}

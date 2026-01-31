@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
-	"github.com/hashicorp/terraform-provider-helm/helm"
+	"github.com/schnell3526/terraform-provider-helm/helm"
 )
 
 var providerFactory = map[string]func() (tfprotov6.ProviderServer, error){
