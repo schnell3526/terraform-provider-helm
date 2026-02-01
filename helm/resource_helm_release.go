@@ -765,7 +765,7 @@ func (r *HelmRelease) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	createTimeout, diags := state.Timeouts.Create(ctx, 20*time.Minute)
+	createTimeout, diags := plan.Timeouts.Create(ctx, 20*time.Minute)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -969,7 +969,7 @@ func (r *HelmRelease) Create(ctx context.Context, req resource.CreateRequest, re
 		}
 
 		// Save state to prevent orphaning the release from Terraform tracking
-		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+		resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
 		resp.Diagnostics.Append(diag.NewWarningDiagnostic("Helm release created with warnings", fmt.Sprintf("Helm release %q was created but has a failed status. Use the `helm` command to investigate the error, correct it, then run Terraform again.", client.ReleaseName)))
 		resp.Diagnostics.Append(diag.NewErrorDiagnostic("Helm release error", err.Error()))
