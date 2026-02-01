@@ -247,7 +247,7 @@ resource "helm_release" "test" {
 					resource.TestCheckResourceAttr(resourceName, "metadata.0.name", name),
 					resource.TestCheckResourceAttr(resourceName, "metadata.0.namespace", namespace),
 					resource.TestCheckResourceAttr(resourceName, "metadata.0.chart", "nginx"),
-					resource.TestCheckResourceAttr(resourceName, "metadata.0.version", "9.5.0"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.version", "15.0.0"),
 					resource.TestCheckResourceAttrSet(resourceName, "metadata.0.app_version"),
 					resource.TestCheckResourceAttr(resourceName, "status", "deployed"),
 					resource.TestCheckResourceAttr(resourceName, "metadata.0.revision", "1"),
@@ -273,7 +273,7 @@ resource "helm_release" "test" {
 					resource.TestCheckResourceAttr(resourceName, "metadata.name", name),
 					resource.TestCheckResourceAttr(resourceName, "metadata.namespace", namespace),
 					resource.TestCheckResourceAttr(resourceName, "metadata.chart", "nginx"),
-					resource.TestCheckResourceAttr(resourceName, "metadata.version", "9.5.0"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.version", "15.0.0"),
 					resource.TestCheckResourceAttrSet(resourceName, "metadata.app_version"),
 					resource.TestCheckResourceAttr(resourceName, "status", "deployed"),
 					// first_deployed and last_deployed should be populated on next apply
