@@ -279,7 +279,8 @@ resource "helm_release" "test" {
 					// first_deployed and last_deployed should be populated on next apply
 					resource.TestCheckResourceAttrSet(resourceName, "metadata.first_deployed"),
 					resource.TestCheckResourceAttrSet(resourceName, "metadata.last_deployed"),
-					resource.TestCheckResourceAttr(resourceName, "metadata.revision", "2"),
+					// revision stays at 1 because StateUpgrader only migrates state, no actual Helm upgrade
+					resource.TestCheckResourceAttr(resourceName, "metadata.revision", "1"),
 				),
 			},
 		},
