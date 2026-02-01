@@ -58,6 +58,7 @@ State is compatible - no import required.
 
 - Fix: Preserve Terraform state on failed Helm operations ([#1669](https://github.com/hashicorp/terraform-provider-helm/issues/1669))
 - Fix: Nil pointer crash when updating OCI chart dependencies ([#1726](https://github.com/hashicorp/terraform-provider-helm/pull/1726))
+- Backport: Add StateUpdater for schema_version 0 ([#1741](https://github.com/hashicorp/terraform-provider-helm/pull/1741)) - Fixes upgrade path from provider versions < 2.17.0
 
 ## Roadmap
 
