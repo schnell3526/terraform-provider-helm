@@ -239,7 +239,7 @@ resource "helm_release" "test" {
   namespace  = "%s"
   repository = "https://charts.bitnami.com/bitnami"
   chart      = "nginx"
-  version    = "9.5.0"
+  version    = "15.0.0"
   wait       = false
 }
 `, name, namespace),
@@ -264,7 +264,7 @@ resource "helm_release" "test" {
   namespace  = "%s"
   repository = "https://charts.bitnami.com/bitnami"
   chart      = "nginx"
-  version    = "9.5.0"
+  version    = "15.0.0"
   wait       = false
 }
 `, name, namespace),
@@ -307,7 +307,7 @@ resource "helm_release" "test" {
   namespace  = "%s"
   repository = "https://charts.bitnami.com/bitnami"
   chart      = "nginx"
-  version    = "9.5.0"
+  version    = "15.0.0"
   wait       = false
   values     = [
 <<EOF
@@ -328,7 +328,7 @@ resource "helm_release" "test" {
   namespace  = "%s"
   repository = "https://charts.bitnami.com/bitnami"
   chart      = "nginx"
-  version    = "9.5.0"
+  version    = "15.0.0"
   wait       = false
   values     = [
 <<EOF
@@ -351,11 +351,11 @@ func TestAccHelmRelease_UpgradeV0_PostrenderStructure(t *testing.T) {
 	resourceName := "helm_release.test"
 
 	binaryPath := "true"
-	args := []string{"hello", "world"}
 
 	resource.ParallelTest(t, resource.TestCase{
 		Steps: []resource.TestStep{
 			// Step 1: Apply using old SDKv2 (v2.4.0) - schema version 0
+			// Note: v2.4.0 does not support postrender.args, so we only test binary_path
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"helm": {
@@ -369,21 +369,17 @@ resource "helm_release" "test" {
   namespace  = "%s"
   repository = "https://charts.bitnami.com/bitnami"
   chart      = "nginx"
-  version    = "9.5.0"
+  version    = "15.0.0"
 
   postrender {
     binary_path = "%s"
-    args        = ["%s", "%s"]
   }
 
   wait = false
 }
-`, name, namespace, binaryPath, args[0], args[1]),
+`, name, namespace, binaryPath),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "postrender.0.binary_path", binaryPath),
-					resource.TestCheckResourceAttr(resourceName, "postrender.0.args.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "postrender.0.args.0", args[0]),
-					resource.TestCheckResourceAttr(resourceName, "postrender.0.args.1", args[1]),
 				),
 			},
 
@@ -396,22 +392,18 @@ resource "helm_release" "test" {
   namespace  = "%s"
   repository = "https://charts.bitnami.com/bitnami"
   chart      = "nginx"
-  version    = "9.5.0"
+  version    = "15.0.0"
 
   postrender = {
     binary_path = "%s"
-    args        = ["%s", "%s"]
   }
 
   wait = false
 }
-`, name, namespace, binaryPath, args[0], args[1]),
+`, name, namespace, binaryPath),
 				// Checking if structure of postrender has been migrated from v0 to plugin framework structure
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "postrender.binary_path", binaryPath),
-					resource.TestCheckResourceAttr(resourceName, "postrender.args.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "postrender.args.0", args[0]),
-					resource.TestCheckResourceAttr(resourceName, "postrender.args.1", args[1]),
 				),
 			},
 		},
@@ -440,7 +432,7 @@ resource "helm_release" "test" {
   namespace  = "%s"
   repository = "https://charts.bitnami.com/bitnami"
   chart      = "nginx"
-  version    = "9.5.0"
+  version    = "15.0.0"
   wait       = false
 
   set {
@@ -472,7 +464,7 @@ resource "helm_release" "test" {
   namespace  = "%s"
   repository = "https://charts.bitnami.com/bitnami"
   chart      = "nginx"
-  version    = "9.5.0"
+  version    = "15.0.0"
   wait       = false
 
   set = [{
