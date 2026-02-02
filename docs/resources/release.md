@@ -374,6 +374,24 @@ chart, which means that if there are any
 [statefulset](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/) resources in the chart, they will
 be replaced, which will cause a rolling update of the pods.
 
+## Plan Behavior
+
+### Server-Side vs Client-Side Dry-Run
+
+During `terraform plan`, the provider performs a dry-run to validate the Helm release configuration. There are two modes:
+
+- **Server-Side Dry-Run (SSA)**: Sends the manifests to the Kubernetes API server for validation. Provides accurate validation including webhook checks and conflict detection. Requires write permissions.
+
+- **Client-Side Dry-Run (CSA)**: Validates manifests locally without contacting the API server. Less accurate but works with read-only credentials.
+
+The provider automatically falls back from SSA to CSA when permission errors occur.
+
+### Using Read-Only Credentials for Plan
+
+If you run `terraform plan` with read-only Kubernetes credentials (common in CI/CD pipelines), the provider will automatically use client-side dry-run. No additional configuration is required.
+
+-> **Note:** Some validation errors may only be detected during `terraform apply` when using client-side dry-run.
+
 ## Import
 
 A Helm Release resource can be imported using its namespace and name e.g.
