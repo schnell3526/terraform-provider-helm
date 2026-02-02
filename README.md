@@ -52,6 +52,12 @@ terraform {
 terraform init -upgrade
 ```
 
+If you have existing state, you need to replace the provider reference:
+
+```bash
+terraform state replace-provider hashicorp/helm schnell3526/helm
+```
+
 State is compatible - no import required.
 
 ## Changes from upstream
