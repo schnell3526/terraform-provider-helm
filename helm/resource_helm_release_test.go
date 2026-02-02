@@ -803,24 +803,24 @@ func TestAccResourceRelease_updateExistingFailed(t *testing.T) {
 					resource.TestCheckResourceAttr("helm_release.test", "status", release.StatusFailed.String()),
 				),
 			},
-			// Step 3: Re-apply same invalid config - should NOT produce "cannot re-use a name" error
+			// Step 3: Re-apply same invalid config - no diff means no apply (fix for #1751)
+			// This verifies that unnecessary upgrades are not triggered when status is "failed"
 			{
 				Config: testAccHelmReleaseConfigValues(
 					testResourceName, namespace, name, "test-chart", "1.2.3",
 					[]string{"service:\n  type: invalid%-$type"},
 				),
-				ExpectError:        regexp.MustCompile("Unsupported value"),
-				ExpectNonEmptyPlan: true,
+				PlanOnly: true,
 			},
 			// Step 4: Fix the configuration and verify recovery from FAILED to DEPLOYED
-			// Note: revision is 4 because each failed upgrade (Step 2 and Step 3) increments the revision
+			// Note: revision is 3 (not 4) because Step 3 no longer triggers an upgrade
 			{
 				Config: testAccHelmReleaseConfigValues(
 					testResourceName, namespace, name, "test-chart", "1.2.3",
 					[]string{"serviceAccount:\n  name: recovered-name"},
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("helm_release.test", "metadata.revision", "4"),
+					resource.TestCheckResourceAttr("helm_release.test", "metadata.revision", "3"),
 					resource.TestCheckResourceAttr("helm_release.test", "status", release.StatusDeployed.String()),
 				),
 			},
@@ -911,9 +911,9 @@ func TestAccResourceRelease_refreshPreservesFailedState(t *testing.T) {
 			},
 			// Step 3: Run refresh - FAILED release should remain in state
 			// Note: RefreshState cannot be used with Config, so we omit Config here
+			// Note: ExpectNonEmptyPlan is false because status no longer forces a diff (fix for #1751)
 			{
-				RefreshState:       true,
-				ExpectNonEmptyPlan: true,
+				RefreshState: true,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("helm_release.test", "status", release.StatusFailed.String()),
 				),
@@ -966,13 +966,14 @@ func TestAccResourceRelease_comprehensiveReleaseDetection(t *testing.T) {
 				),
 			},
 			// Step 4: Plan-only to verify release is still detected in FAILED state
+			// Note: Plan is empty because status no longer forces a diff (fix for #1751)
+			// The important check is that the resource is still tracked (not removed from state)
 			{
 				Config: testAccHelmReleaseConfigValues(
 					testResourceName, namespace, name, "test-chart", "1.2.3",
 					[]string{"service:\n  type: invalid%-$type"},
 				),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
+				PlanOnly: true,
 			},
 		},
 	})
@@ -1010,6 +1011,8 @@ func TestAccResourceRelease_failedInitialDeployPreservesState(t *testing.T) {
 				),
 			},
 			// Step 2: Re-apply same failing config - should NOT produce "cannot re-use a name" error
+			// Note: Resource is tainted from Step 1 failure, so plan will show replace
+			// The key test here is that we don't get "cannot re-use a name" error
 			{
 				Config:             failed,
 				ExpectError:        regexp.MustCompile(`namespaces "doesnt-exist" not found`),

@@ -2032,9 +2032,6 @@ func (r *HelmRelease) ModifyPlan(ctx context.Context, req resource.ModifyPlanReq
 		return
 	}
 
-	// Always set desired state to DEPLOYED
-	plan.Status = types.StringValue(release.StatusDeployed.String())
-
 	if !useChartVersion(plan.Chart.ValueString(), plan.Repository.ValueString()) {
 		// Check if version has changed
 		if state != nil && !plan.Version.Equal(state.Version) {
@@ -2338,6 +2335,21 @@ You should update the version in your configuration to %[2]q, or remove the vers
 		tflog.Debug(ctx, fmt.Sprintf("%s Metadata has changes, setting to unknown", logID))
 		plan.Metadata = types.ObjectUnknown(metadataAttrTypes())
 	}
+
+	// Handle status based on whether there are configuration changes
+	// Fix for hashicorp/terraform-provider-helm#1751
+	if state != nil {
+		if recomputeMetadata(plan, state) {
+			// Configuration changes detected, status may change after apply
+			tflog.Debug(ctx, fmt.Sprintf("%s Configuration changes detected, setting status to unknown", logID))
+			plan.Status = types.StringUnknown()
+		} else {
+			// No configuration changes, preserve the state value to avoid unnecessary diff
+			tflog.Debug(ctx, fmt.Sprintf("%s No configuration changes, preserving status from state", logID))
+			plan.Status = state.Status
+		}
+	}
+	// If state is nil (new resource), status remains unknown by default
 
 	resp.Plan.Set(ctx, &plan)
 }
