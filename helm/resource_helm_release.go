@@ -311,6 +311,7 @@ func (r *HelmRelease) Schema(ctx context.Context, req resource.SchemaRequest, re
 			"devel": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 				Description: "Use chart development versions, too. Equivalent to version '>0.0.0-0'. If 'version' is set, this is ignored",
 				PlanModifiers: []planmodifier.Bool{
 					suppressDevel(),
@@ -346,6 +347,7 @@ func (r *HelmRelease) Schema(ctx context.Context, req resource.SchemaRequest, re
 			"keyring": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Location of public keys used for verification, Used only if 'verify is true'",
 				PlanModifiers: []planmodifier.String{
 					suppressKeyring(),
