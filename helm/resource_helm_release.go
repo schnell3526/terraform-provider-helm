@@ -196,7 +196,7 @@ func suppressDescription() planmodifier.String {
 type suppressDevelPlanModifier struct{}
 
 func (m suppressDevelPlanModifier) Description(ctx context.Context) string {
-	return "Suppress changes if the version is set"
+	return "When devel is not set in the config, keep the value from prior state instead of planning a new value."
 }
 
 func (m suppressDevelPlanModifier) MarkdownDescription(ctx context.Context) string {
@@ -204,9 +204,12 @@ func (m suppressDevelPlanModifier) MarkdownDescription(ctx context.Context) stri
 }
 
 func (m suppressDevelPlanModifier) PlanModifyBool(ctx context.Context, req planmodifier.BoolRequest, resp *planmodifier.BoolResponse) {
-	var version types.String
-	req.Plan.GetAttribute(ctx, path.Root("version"), &version)
-	if !version.IsNull() && version.ValueString() != "" && req.ConfigValue.IsNull() {
+	// devel is an optional input. It is declared Computed so that, when it is
+	// absent from the config, we can carry the prior state value forward
+	// without Terraform rejecting the plan ("planned value for a non-computed
+	// attribute"). Falling back to the prior state (null on create) always
+	// yields a known value, so the attribute never stays unknown after apply.
+	if req.ConfigValue.IsNull() {
 		resp.PlanValue = req.StateValue
 	}
 }
@@ -219,7 +222,7 @@ func suppressDevel() planmodifier.Bool {
 type suppressKeyringPlanModifier struct{}
 
 func (m suppressKeyringPlanModifier) Description(ctx context.Context) string {
-	return "Suppress changes if verify is false"
+	return "When keyring is not set in the config, keep the value from prior state instead of planning a new value."
 }
 
 func (m suppressKeyringPlanModifier) MarkdownDescription(ctx context.Context) string {
@@ -227,9 +230,13 @@ func (m suppressKeyringPlanModifier) MarkdownDescription(ctx context.Context) st
 }
 
 func (m suppressKeyringPlanModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
-	var verify types.Bool
-	req.Plan.GetAttribute(ctx, path.Root("verify"), &verify)
-	if !verify.IsNull() && !verify.ValueBool() {
+	// keyring is an optional input. It is declared Computed so that, when it is
+	// absent from the config, we can carry the prior state value forward
+	// without Terraform rejecting the plan ("planned value for a non-computed
+	// attribute"). This is what allows upgrading from provider v2.x, whose
+	// state stored a non-null keyring, to plan cleanly. When the user does set
+	// keyring explicitly, the config value is always honored.
+	if req.ConfigValue.IsNull() {
 		resp.PlanValue = req.StateValue
 	}
 }
@@ -309,7 +316,11 @@ func (r *HelmRelease) Schema(ctx context.Context, req resource.SchemaRequest, re
 				},
 			},
 			"devel": schema.BoolAttribute{
-				Optional:    true,
+				Optional: true,
+				// Computed so the suppressDevel plan modifier can carry the
+				// prior-state value forward when devel is absent from the
+				// config (required for clean upgrades from provider v2.x).
+				Computed:    true,
 				Description: "Use chart development versions, too. Equivalent to version '>0.0.0-0'. If 'version' is set, this is ignored",
 				PlanModifiers: []planmodifier.Bool{
 					suppressDevel(),
@@ -343,7 +354,11 @@ func (r *HelmRelease) Schema(ctx context.Context, req resource.SchemaRequest, re
 				Computed: true,
 			},
 			"keyring": schema.StringAttribute{
-				Optional:    true,
+				Optional: true,
+				// Computed so the suppressKeyring plan modifier can carry the
+				// prior-state value forward when keyring is absent from the
+				// config (required for clean upgrades from provider v2.x).
+				Computed:    true,
 				Description: "Location of public keys used for verification, Used only if 'verify is true'",
 				PlanModifiers: []planmodifier.String{
 					suppressKeyring(),
@@ -633,8 +648,13 @@ func (r *HelmRelease) Schema(ctx context.Context, req resource.SchemaRequest, re
 							Required:  true,
 							Sensitive: true,
 						},
+						// Computed + default "" mirrors the "set" block's type
+						// attribute so an omitted type plans consistently with
+						// stored state (required for clean upgrades from v2.x).
 						"type": schema.StringAttribute{
 							Optional: true,
+							Computed: true,
+							Default:  stringdefault.StaticString(""),
 							Validators: []validator.String{
 								stringvalidator.OneOf("auto", "string", "literal"),
 							},
