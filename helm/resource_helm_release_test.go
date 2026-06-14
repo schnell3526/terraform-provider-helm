@@ -113,6 +113,44 @@ func TestAccResourceRelease_set_wo(t *testing.T) {
 	})
 }
 
+// TestAccResourceRelease_dropOptionalComputed reproduces the upgrade-from-v2.x
+// scenario from hashicorp/terraform-provider-helm#1695: a release whose prior
+// state carries non-null values for optional-but-suppressed attributes
+// (keyring, devel) must still plan cleanly once those attributes are removed
+// from the configuration. Before keyring/devel were made Computed, the suppress
+// plan modifiers wrote the prior-state value onto a non-computed attribute,
+// which Terraform rejects with "planned value ... for a non-computed attribute".
+func TestAccResourceRelease_dropOptionalComputed(t *testing.T) {
+	name := randName("dropoptional")
+	namespace := createRandomNamespace(t)
+	defer deleteNamespace(t, namespace)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: protoV6ProviderFactories(),
+		Steps: []resource.TestStep{
+			{
+				// keyring/devel are present in state, as they would be after a
+				// release created by the v2.x provider.
+				Config: testAccHelmReleaseConfigDropOptionalComputed(testResourceName, namespace, name, "1.2.3",
+					"keyring = \"/tmp/example.gpg\"\n\t\t\tdevel   = true"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("helm_release.test", "keyring", "/tmp/example.gpg"),
+					resource.TestCheckResourceAttr("helm_release.test", "devel", "true"),
+				),
+			},
+			{
+				// Removing them from the config must not error and must carry
+				// the prior values forward (suppressed change, empty plan).
+				Config: testAccHelmReleaseConfigDropOptionalComputed(testResourceName, namespace, name, "1.2.3", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("helm_release.test", "keyring", "/tmp/example.gpg"),
+					resource.TestCheckResourceAttr("helm_release.test", "devel", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccResourceRelease_emptyVersion(t *testing.T) {
 	name := randName("basic")
 	namespace := createRandomNamespace(t)
@@ -1445,6 +1483,19 @@ func testAccHelmReleaseConfigBasic(resource, ns, name, version string) string {
 			]
 		}
 	`, resource, name, ns, testRepositoryURL, version)
+}
+
+func testAccHelmReleaseConfigDropOptionalComputed(resource, ns, name, version, extra string) string {
+	return fmt.Sprintf(`
+		resource "helm_release" "%s" {
+			name       = %q
+			namespace  = %q
+			repository = %q
+			chart      = "test-chart"
+			version    = %q
+			%s
+		}
+	`, resource, name, ns, testRepositoryURL, version, extra)
 }
 
 func testAccHelmReleaseConfig_set_wo(resource, ns, name, version string) string {
