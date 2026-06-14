@@ -1,3 +1,13 @@
+## 3.1.9 (June 14, 2026)
+
+BUG FIXES:
+
+* `resource/helm_release`: Fix `Provider produced invalid plan` error on the first plan after upgrading from provider v2.x, caused by the `keyring`/`devel` suppress plan modifiers writing a prior-state value onto a non-computed attribute. These attributes are now Computed and their plan modifiers fall back to prior state only when omitted from the config [[GH-1695](https://github.com/hashicorp/terraform-provider-helm/issues/1695)]
+
+NOTES:
+
+* Includes upstream v3.2.0 (Go 1.25.8, hc-install bump fixing Terraform CLI install, OCI concurrent-rename fix, dependency updates)
+
 ## 3.2.0 (June 4, 2026)
 
 ENHANCEMENT:
