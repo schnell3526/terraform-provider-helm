@@ -2643,6 +2643,7 @@ func setupOCIRegistry(t *testing.T, usepassword bool) (string, func()) {
 		// log into OCI registry
 		t.Log("logging in to test-chart to OCI registry")
 		cmd = exec.Command(helmPath, "registry", "login",
+			"--plain-http",
 			fmt.Sprintf("localhost:%s", ociRegistryPort),
 			"--username", "hashicorp",
 			"--password", "terraform")
@@ -2657,6 +2658,7 @@ func setupOCIRegistry(t *testing.T, usepassword bool) (string, func()) {
 	// push chart to OCI registry
 	t.Log("pushing test-chart to OCI registry")
 	cmd = exec.Command(helmPath, "push",
+		"--plain-http", // helm 4 no longer falls back to HTTP for localhost
 		"test-chart-1.2.3.tgz",
 		ociRegistryURL)
 	out, err = cmd.CombinedOutput()

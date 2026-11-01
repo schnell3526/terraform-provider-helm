@@ -1,6 +1,6 @@
 module github.com/schnell3526/terraform-provider-helm
 
-go 1.25.8
+go 1.27.3
 
 require (
 	github.com/hashicorp/go-version v1.9.0
