@@ -1,3 +1,13 @@
+## 3.1.10 (November 1, 2026)
+
+SECURITY:
+
+* Upgrade `go` from `1.25.8` to `1.27.3` to pick up the `crypto/x509` mitigation that distrusts compromised eMudhra intermediate CA keys (CVE-2026-111943)
+
+NOTES:
+
+* Acceptance tests now run against Terraform 1.15, 1.16 and 1.17, and the older version matrix is thinned out (1.3 and 1.7 removed)
+
 ## 3.1.9 (June 14, 2026)
 
 BUG FIXES:
