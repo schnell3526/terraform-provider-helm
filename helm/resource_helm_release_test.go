@@ -1461,6 +1461,39 @@ func TestAccResourceRelease_LocalVersion(t *testing.T) {
 	})
 }
 
+// version comes from a value unknown at plan time (e.g. a data source).
+// Regression test for hashicorp/terraform-provider-helm#1694.
+func TestAccResourceRelease_unknownConfigVersion(t *testing.T) {
+	name := randName("unknown-version")
+	namespace := createRandomNamespace(t)
+	defer deleteNamespace(t, namespace)
+
+	config := fmt.Sprintf(`
+	resource "terraform_data" "version" {
+		input = "1.2.3"
+	}
+
+	resource "helm_release" "test" {
+		name      = %q
+		namespace = %q
+		chart     = "testdata/charts/test-chart"
+		version   = terraform_data.version.output
+	}`, name, namespace)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: protoV6ProviderFactories(),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("helm_release.test", "version", "1.2.3"),
+					resource.TestCheckResourceAttr("helm_release.test", "status", release.StatusDeployed.String()),
+				),
+			},
+		},
+	})
+}
+
 func testAccHelmReleaseConfigBasic(resource, ns, name, version string) string {
 	return fmt.Sprintf(`
 		resource "helm_release" "%s" {
