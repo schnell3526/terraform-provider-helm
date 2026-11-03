@@ -2350,7 +2350,11 @@ func (r *HelmRelease) ModifyPlan(ctx context.Context, req resource.ModifyPlanReq
 			plan.Version = types.StringNull()
 		}
 
-		if !config.Version.IsNull() && !config.Version.IsUnknown() && !config.Version.Equal(plan.Version) {
+		if config.Version.IsUnknown() {
+			// The configured version is not known until apply (e.g. it comes from a
+			// data source). Terraform requires the planned value to stay unknown too.
+			plan.Version = types.StringUnknown()
+		} else if !config.Version.IsNull() && !config.Version.Equal(plan.Version) {
 			if versionsEqual(config.Version.ValueString(), plan.Version.ValueString()) {
 				plan.Version = config.Version
 			} else {
