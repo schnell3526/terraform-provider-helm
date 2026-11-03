@@ -2646,7 +2646,8 @@ func setupOCIRegistry(t *testing.T, usepassword bool) (string, func()) {
 			"--plain-http",
 			fmt.Sprintf("localhost:%s", ociRegistryPort),
 			"--username", "hashicorp",
-			"--password", "terraform")
+			"--password", "terraform",
+			"--plain-http")
 		out, err = cmd.CombinedOutput()
 		t.Log(string(out))
 		if err != nil {
@@ -2660,7 +2661,8 @@ func setupOCIRegistry(t *testing.T, usepassword bool) (string, func()) {
 	cmd = exec.Command(helmPath, "push",
 		"--plain-http", // helm 4 no longer falls back to HTTP for localhost
 		"test-chart-1.2.3.tgz",
-		ociRegistryURL)
+		ociRegistryURL,
+		"--plain-http")
 	out, err = cmd.CombinedOutput()
 	t.Log(string(out))
 	if err != nil {
