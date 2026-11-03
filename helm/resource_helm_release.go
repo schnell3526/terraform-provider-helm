@@ -1730,7 +1730,16 @@ func getListValue(ctx context.Context, base map[string]interface{}, set set_list
 }
 
 func versionsEqual(a, b string) bool {
-	return strings.TrimPrefix(a, "v") == strings.TrimPrefix(b, "v")
+	a = strings.TrimPrefix(a, "v")
+	b = strings.TrimPrefix(b, "v")
+	// Strip semver build metadata (everything after "+") before comparison
+	if idx := strings.Index(a, "+"); idx != -1 {
+		a = a[:idx]
+	}
+	if idx := strings.Index(b, "+"); idx != -1 {
+		b = b[:idx]
+	}
+	return a == b
 }
 
 func setReleaseAttributes(ctx context.Context, state *HelmReleaseModel, identity *tfsdk.ResourceIdentity, r *release.Release, meta *Meta) diag.Diagnostics {
@@ -2341,7 +2350,11 @@ func (r *HelmRelease) ModifyPlan(ctx context.Context, req resource.ModifyPlanReq
 			plan.Version = types.StringNull()
 		}
 
-		if !config.Version.IsNull() && !config.Version.Equal(plan.Version) {
+		if config.Version.IsUnknown() {
+			// The configured version is not known until apply (e.g. it comes from a
+			// data source). Terraform requires the planned value to stay unknown too.
+			plan.Version = types.StringUnknown()
+		} else if !config.Version.IsNull() && !config.Version.Equal(plan.Version) {
 			if versionsEqual(config.Version.ValueString(), plan.Version.ValueString()) {
 				plan.Version = config.Version
 			} else {
