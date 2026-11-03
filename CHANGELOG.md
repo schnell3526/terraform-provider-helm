@@ -1,3 +1,13 @@
+## 3.1.12 (November 3, 2026)
+
+BUG FIXES:
+
+* `resource/helm_release`: Fix `Planned version is different from configured version` error when `version` is unknown at plan time (e.g. comes from a data source), and when the resolved chart version carries semver build metadata (`0.3.0+abc`) [[GH-1694](https://github.com/hashicorp/terraform-provider-helm/issues/1694)]
+
+NOTES:
+
+* Version ranges (e.g. `10.*.*`) are not yet supported and still produce the error. Backport of upstream PR [#1833](https://github.com/hashicorp/terraform-provider-helm/pull/1833).
+
 ## 3.1.11 (November 3, 2026)
 
 ENHANCEMENT:
