@@ -1469,19 +1469,25 @@ func TestAccResourceRelease_unknownConfigVersion(t *testing.T) {
 	defer deleteNamespace(t, namespace)
 
 	config := fmt.Sprintf(`
-	resource "terraform_data" "version" {
-		input = "1.2.3"
+	resource "random_integer" "patch" {
+		min = 3
+		max = 3
 	}
 
 	resource "helm_release" "test" {
 		name      = %q
 		namespace = %q
 		chart     = "testdata/charts/test-chart"
-		version   = terraform_data.version.output
+		version   = "1.2.${random_integer.patch.result}"
 	}`, name, namespace)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: protoV6ProviderFactories(),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"random": {
+				Source: "hashicorp/random",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
 				Config: config,
